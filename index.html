@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Website Behaviour &amp; Visibility Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f7f4;--panel:#fff;--ink:#121212;--muted:#6b6b66;--line:#e4e4de;--accent:#4f46e5;--on:#fff;--accent2:#ff5b3a;--soft:#f0f0ea;--danger:#dc2626;--shadow:0 24px 60px rgba(18,18,40,.16);--ease:cubic-bezier(.2,.9,.2,1)}
+[data-theme=dark]{--bg:#0b0b0d;--panel:#151518;--ink:#f4f4f1;--muted:#9a9a94;--line:#2a2a2f;--accent:#8b85ff;--on:#0b0b14;--accent2:#ff7a59;--soft:#1d1d22;--danger:#f87171;--shadow:0 24px 60px rgba(0,0,0,.6)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;padding:28px 408px 60px 28px;background:var(--bg);color:var(--ink);font:16px/1.55 "Bricolage Grotesque","Segoe UI",system-ui,sans-serif;transition:padding .5s var(--ease),background .4s,color .4s}
+body.nodock{padding-right:28px}
+main{max-width:980px;margin:0 auto}
+h1,h2,h3{line-height:1.12;margin:0 0 10px;letter-spacing:-.02em}
+button{font:inherit;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px 15px;cursor:pointer;transition:transform .25s var(--ease),box-shadow .25s,border-color .2s,background .2s}
+button:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 8px 18px rgba(0,0,0,.08)}button:active{transform:scale(.96)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.primary{background:var(--accent);color:var(--on);border-color:transparent;font-weight:600}.primary:hover{box-shadow:0 10px 26px color-mix(in srgb,var(--accent) 45%,transparent)}
+.danger{color:var(--danger)}
+#prog{position:fixed;top:0;left:0;height:3px;width:100%;transform-origin:left;transform:scaleX(0);background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:1300}
+#glow{position:fixed;left:0;top:0;width:440px;height:440px;margin:-220px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 14%,transparent),transparent 65%);pointer-events:none;z-index:1;transition:transform .18s ease-out}
+header{position:relative;overflow:hidden;isolation:isolate;padding:54px 40px 38px;margin-bottom:22px;border-radius:26px;background:#0d0d12;color:#f4f4f1}
+header::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(360px circle at var(--mx,70%) var(--my,30%),rgba(255,255,255,.13),transparent 60%)}
+.blob{position:absolute;border-radius:50%;filter:blur(55px);opacity:.55;z-index:0;animation:drift 14s ease-in-out infinite alternate}
+.b1{width:320px;height:320px;background:#4f46e5;right:-70px;top:-90px}.b2{width:250px;height:250px;background:#ff5b3a;left:38%;bottom:-140px;opacity:.38;animation-delay:-7s}
+@keyframes drift{to{transform:translate(-70px,44px) scale(1.25)}}
+header h1,header p,.readout{position:relative;z-index:1}
+header h1{font-size:clamp(32px,5vw,62px);font-weight:800;letter-spacing:-.04em;max-width:12em}
+.w{display:inline-block;opacity:0;transform:translateY(.7em) rotate(4deg);animation:wIn .9s var(--ease) forwards;animation-delay:calc(var(--i)*80ms + 250ms)}
+@keyframes wIn{to{opacity:1;transform:none}}
+header p{max-width:36em;opacity:.75;margin:0 0 28px}
+.readout{display:flex;flex-wrap:wrap;gap:12px}
+.readout div{min-width:112px;padding:11px 15px;border:1px solid rgba(255,255,255,.16);border-radius:14px;background:rgba(255,255,255,.06);backdrop-filter:blur(10px)}
+.readout b{display:block;font-size:26px;font-variant-numeric:tabular-nums}.readout span{font-size:12px;opacity:.65}
+.readout .wide{flex:1 1 220px}.readout .wide b{font-size:16px;line-height:1.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}nav button{border-radius:999px;background:var(--panel)}
+.block,.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px;margin-bottom:20px;transition:transform .4s var(--ease),box-shadow .3s,opacity .7s var(--ease),border-color .3s}
+.block:hover,.card:hover{box-shadow:var(--shadow);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.rv{opacity:0;transform:translateY(28px)}.rv.in{opacity:1;transform:none}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}.cards .card{margin:0}
+.card p{color:var(--muted)}.tall{min-height:340px}
+.target{position:relative;min-height:210px;display:grid;place-items:center;text-align:center;border:2px dashed var(--accent);border-radius:16px;background:var(--soft);font-size:1.15rem}
+.target::after{content:"";position:absolute;inset:-2px;border-radius:16px;border:2px solid var(--accent);animation:ring 2.4s ease-out infinite;pointer-events:none}
+@keyframes ring{from{opacity:.7;transform:scale(1)}to{opacity:0;transform:scale(1.04,1.14)}}
+.tryrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+#viz{position:absolute;left:0;top:0;pointer-events:none;z-index:400}
+.rip{position:absolute;width:20px;height:20px;margin:-10px;border-radius:50%;border:2px solid var(--accent2);pointer-events:none;z-index:450;animation:rip .8s ease-out forwards}
+@keyframes rip{to{transform:scale(7);opacity:0}}
+/* dock */
+#dock{position:fixed;top:12px;right:12px;bottom:12px;width:372px;z-index:1000;display:flex;flex-direction:column;background:color-mix(in srgb,var(--panel) 80%,transparent);backdrop-filter:blur(20px) saturate(1.5);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);transition:transform .5s var(--ease);animation:dockIn .9s .3s var(--ease) backwards}
+@keyframes dockIn{from{transform:translateX(115%);opacity:0}}
+body.nodock #dock{transform:translateX(120%)}
+.dh{display:flex;align-items:center;gap:6px;padding:16px 14px 12px}.dh>div{flex:1;min-width:0}.dh small{display:block;color:var(--muted);font-size:11px;overflow:hidden;text-overflow:ellipsis}
+.dh button{padding:5px 10px;font-size:13px}
+.pill{border-radius:99px!important;font-size:12px;font-weight:600;background:var(--accent)!important;color:var(--on)!important}
+.pill::before{content:"";display:inline-block;width:7px;height:7px;margin-right:7px;border-radius:50%;background:currentColor;animation:pulse 1.6s infinite}
+.pill.off{background:var(--danger)!important;color:#fff!important}.pill.off::before{animation:none;opacity:.6}
+@keyframes pulse{0%{box-shadow:0 0 0 0 currentColor}70%,100%{box-shadow:0 0 0 7px transparent}}
+.tabs{position:relative;display:flex;gap:2px;padding:0 10px;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;border:0;border-radius:8px 8px 0 0;background:none;box-shadow:none;padding:9px 4px;font-size:13px;color:var(--muted)}
+.tabs button:hover{transform:none;box-shadow:none;color:var(--ink)}.tabs button[aria-selected=true]{color:var(--ink);font-weight:600}
+.ind{position:absolute;bottom:-1px;left:0;width:0;height:3px;border-radius:3px;background:var(--accent);transition:left .4s var(--ease),width .4s var(--ease)}
+.tp{flex:1;overflow:auto;padding:14px}.tp:not([hidden]){animation:tpIn .45s var(--ease)}
+@keyframes tpIn{from{opacity:0;transform:translateY(10px)}}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.tile{background:var(--soft);border-radius:12px;padding:9px 8px 7px;min-width:0;transition:transform .3s var(--ease)}.tile:hover{transform:translateY(-3px)}
+.tile b{display:block;font-size:18px;font-variant-numeric:tabular-nums}.tile span{font-size:10.5px;color:var(--muted);line-height:1.2;display:block}
+.bump{animation:bump .55s var(--ease)}@keyframes bump{40%{transform:translateY(-4px) scale(1.12);color:var(--accent)}}
+.two{display:flex;gap:12px}.two>div:last-child{flex:1;min-width:0}
+#mini{width:96px;height:220px;border-radius:10px;cursor:pointer;border:1px solid var(--line);display:block;transition:box-shadow .3s}#mini:hover{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent)}
+#spark{width:100%;height:48px;display:block}
+.cap{font-size:11.5px;color:var(--muted);margin:2px 0 8px}
+.rk{position:relative;display:flex;justify-content:space-between;gap:8px;padding:4px 2px 8px;font-size:12px}.rk span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk i{position:absolute;left:0;bottom:2px;height:3px;border-radius:3px;background:var(--accent);transition:width .6s var(--ease)}
+.opt{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer}.opt input[type=checkbox]{accent-color:var(--accent);width:18px;height:18px}
+.opt small{color:var(--muted);margin-left:auto}.sw{width:14px;height:14px;border-radius:50%}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.chip{border-radius:99px;font-size:12px;padding:4px 12px}.chip[aria-pressed=true]{background:var(--accent);color:var(--on);border-color:transparent}
+#log{font:12px/1.5 ui-monospace,Menlo,monospace;max-height:calc(100vh - 250px);overflow:auto}
+.ev{padding:4px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere;animation:evIn .4s var(--ease)}.ev em{font-style:normal;color:var(--accent);font-weight:700}
+@keyframes evIn{from{opacity:0;transform:translateX(-10px);background:var(--soft)}}
+textarea{width:100%;min-height:200px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px;font:12px ui-monospace,monospace}
+.note{font-size:12.5px;color:var(--muted)}kbd{background:var(--soft);border:1px solid var(--line);border-radius:5px;padding:0 5px;font-size:12px}
+#fab{position:fixed;right:16px;bottom:16px;z-index:999;display:none;box-shadow:var(--shadow);border-radius:99px}body.nodock #fab{display:block;animation:tpIn .5s var(--ease)}
+#toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,30px) scale(.95);opacity:0;z-index:1200;background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:99px;font-size:14px;transition:.4s var(--ease);pointer-events:none}#toast.show{opacity:1;transform:translate(-50%,0)}
+dialog{border:0;border-radius:22px;padding:0;width:min(480px,94vw);background:var(--panel);color:var(--ink);box-shadow:0 30px 80px #0007}dialog[open]{animation:dIn .4s var(--ease)}dialog::backdrop{background:#0008;backdrop-filter:blur(6px)}.dlg{padding:26px}
+@keyframes dIn{from{opacity:0;transform:scale(.92) translateY(16px)}}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:7px;border-bottom:1px solid var(--line)}
+@media(max-width:900px){body{padding:16px 16px 62vh}body.nodock{padding-bottom:24px}#dock{top:auto;left:8px;right:8px;bottom:8px;width:auto;height:58vh}body.nodock #dock{transform:translateY(120%)}#log{max-height:35vh}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.rv,.w{opacity:1!important;transform:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div id="prog"></div><div id="glow"></div>
+<canvas id="viz" aria-hidden="true"></canvas>
+
+<aside id="dock" aria-label="Tracker panel">
+ <div class="dh"><div><strong>Behaviour tracker</strong><small id="sid"></small></div>
+  <button id="bState" class="pill" aria-pressed="true" title="Pause or resume (P)">Tracking</button>
+  <button id="bTheme" aria-label="Switch light or dark theme">Theme</button>
+  <button id="bHide" aria-label="Hide panel (T)">Hide</button></div>
+ <div class="tabs" role="tablist"><i class="ind"></i>
+  <button role="tab" aria-selected="true" data-tab="t1">Overview</button><button role="tab" aria-selected="false" data-tab="t2">Layers</button>
+  <button role="tab" aria-selected="false" data-tab="t3">Log</button><button role="tab" aria-selected="false" data-tab="t4">Data</button></div>
+
+ <section id="t1" class="tp">
+  <div class="tiles" id="tiles"></div>
+  <div class="two">
+   <div><p class="cap">Page map: click to jump</p><canvas id="mini" width="96" height="220" aria-label="Page map showing viewport, scroll depth and clicks"></canvas></div>
+   <div><p class="cap">Events per second, last minute</p><canvas id="spark" aria-label="Activity chart"></canvas>
+    <p class="cap" style="margin-top:14px">Most clicked elements</p><div id="top"></div></div></div>
+  <p class="cap" style="margin-top:10px">Last click</p><div id="lastClick" style="font-size:13px">No clicks yet</div>
+ </section>
+
+ <section id="t2" class="tp" hidden>
+  <label class="opt"><input type="checkbox" data-layer="clicks"><span class="sw" style="background:var(--accent2)"></span>Numbered clicks</label>
+  <label class="opt"><input type="checkbox" data-layer="heat"><span class="sw" style="background:#ef4444"></span>Click heatmap<small>H</small></label>
+  <label class="opt"><input type="checkbox" data-layer="scatter"><span class="sw" style="background:var(--accent)"></span>Click scatter</label>
+  <label class="opt"><input type="checkbox" data-layer="moves"><span class="sw" style="background:#3b82f6"></span>Mouse points</label>
+  <label class="opt"><input type="checkbox" data-layer="path"><span class="sw" style="background:linear-gradient(90deg,#14b8a6,#d98a04)"></span>Mouse path, start to end</label>
+  <label class="opt">Heatmap radius<input id="radius" type="range" min="25" max="120" value="55" style="flex:1;accent-color:var(--accent)"></label>
+  <div class="row"><button class="primary" id="bReplay">Replay mouse path (R)</button><button id="bClear">Hide all layers</button></div>
+  <p class="note">Shortcuts: <kbd>T</kbd> panel, <kbd>P</kbd> pause, <kbd>H</kbd> heatmap, <kbd>R</kbd> replay. Replays do not add to your data.</p>
+ </section>
+
+ <section id="t3" class="tp" hidden>
+  <div class="row" style="margin-top:0" id="chips"></div>
+  <div id="log" aria-live="polite"></div>
+ </section>
+
+ <section id="t4" class="tp" hidden>
+  <div class="row" style="margin-top:0"><button class="primary" id="bSummary">View summary</button><button id="bJson">Export JSON</button><button id="bCsv">Export clicks CSV</button><button id="bCopy">Copy JSON</button><button id="bShow">Preview data</button><button id="bUndo">Undo last click</button><button class="danger" id="bReset">Reset data</button></div>
+  <textarea id="json" readonly placeholder="Choose Preview data to see everything collected so far."></textarea>
+ </section>
+</aside>
+<button id="fab" class="primary" aria-label="Show tracker panel">Show tracker</button>
+<div id="toast" role="status"></div>
+
+<main>
+ <header><div class="blob b1"></div><div class="blob b2"></div><h1>See how people actually use a page</h1>
+  <p>Move, click and scroll anywhere on this demo site. The tracker records clicks, cursor movement, scroll depth and element visibility, then turns them into layers you can switch on.</p>
+  <div class="readout"><div><b id="rx">0</b><span>cursor x</span></div><div><b id="ry">0</b><span>cursor y</span></div><div><b id="rs">0%</b><span>scrolled</span></div><div class="wide"><b id="rel">nothing yet</b><span>element under cursor</span></div></div></header>
+ <nav><button data-scroll="top">Home</button><button data-scroll="products">Products</button><button data-scroll="contact">Contact</button></nav>
+ <section class="block"><h2>Welcome</h2><p>Use this sample website to test the tracker. The tracker panel itself is excluded from collected interactions.</p><div class="tryrow"><button>Learn more</button><button>Get started</button><button id="bait">Apply changes</button></div><p class="note">Tip: hammer the “Apply changes” button. Three quick clicks in one spot count as a rage click.</p></section>
+ <div class="cards" id="products"><article class="card"><h3>Fast delivery</h3><p>Same-day shipping on most orders.</p><button>View delivery</button></article><article class="card"><h3>Easy returns</h3><p>Simple returns and support.</p><button>Return policy</button></article><article class="card"><h3>24/7 support</h3><p>Help whenever you need it.</p><button>Contact support</button></article></div>
+ <section class="block" style="margin-top:20px"><h2>Element visibility test</h2><p>Scroll until the target enters and leaves the viewport. Each visibility change is recorded.</p><div id="visibilityTarget" class="target">Visibility target: scroll into view</div></section>
+ <section class="block tall"><h2>About this demo</h2><p>Move your cursor over this page, click elements and scroll. Open the Layers tab to see the heatmap, scatter points and mouse path.</p><p>The tracker stores page coordinates as well as viewport coordinates, so layers stay aligned on long pages.</p></section>
+ <section class="block tall"><h2>More content</h2><p>This tall section helps test scroll-depth measurement and interactions at different vertical positions.</p><button>Example action</button></section>
+ <section class="block tall" id="contact"><h2>Contact</h2><p>You have reached the lower part of the demo page. Try the page map in the Overview tab to jump back up.</p><button>Contact us</button></section>
+</main>
+
+<dialog id="dlg"><div class="dlg"><h2>Behaviour summary</h2><div class="tiles" id="sTiles" style="grid-template-columns:repeat(3,1fr)"></div><h3>Most-clicked elements</h3><table><thead><tr><th>Element</th><th>Clicks</th></tr></thead><tbody id="sRows"></tbody></table><div class="row" style="justify-content:flex-end"><button id="sJson">Export JSON</button><button class="primary" id="sClose">Close</button></div></div></dialog>
+
+<script>
+(() => {
+'use strict';
+const $=id=>document.getElementById(id),$$=s=>[...document.querySelectorAll(s)];
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const cv=$('viz'),cx=cv.getContext('2d'),mm=$('mini'),mc=mm.getContext('2d'),sp=$('spark'),sc=sp.getContext('2d');
+const S={active:true,t0:Date.now(),id:'session_'+Math.random().toString(36).slice(2,10),events:[],clicks:[],moves:[],scrolls:[],maxDepth:0,raw:0,lastMove:0,lastScroll:0,rage:0,
+ layers:{clicks:true,heat:false,scatter:false,moves:false,path:false},filter:new Set(['click','scroll','visibility','system']),buckets:new Array(60).fill(0),playing:false,ri:null,raf:0};
+const MAX_MOVES=5000,MAX_EVENTS=30000,LOG_MAX=150;
+const nowISO=()=>new Date().toISOString(),el=()=>Math.floor((Date.now()-S.t0)/1000);
+const fmt=s=>s<60?s+'s':Math.floor(s/60)+'m '+s%60+'s';
+const xy=e=>({pageX:e.pageX,pageY:e.pageY,clientX:e.clientX,clientY:e.clientY,viewportWidth:innerWidth,viewportHeight:innerHeight});
+const inUI=e=>!!e.target.closest('#dock,#fab,dialog,#toast');
+const cat=t=>t==='click'||t==='rage_click'?'click':t==='mousemove'?'mousemove':t==='scroll'?'scroll':t.endsWith('visibility')?'visibility':'system';
+function label(n){if(!n||!n.tagName)return 'unknown';let s=n.tagName.toLowerCase();if(n.id)s+='#'+n.id;else if(typeof n.className==='string'&&n.className.trim())s+='.'+n.className.trim().split(/\s+/)[0];const t=(n.innerText||n.getAttribute('aria-label')||'').trim().replace(/\s+/g,' ');return t?s+' "'+(t.length>30?t.slice(0,30)+'…':t)+'"':s}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),2200)}
+
+/* ---------- recording ---------- */
+function record(type,data={}){if(!S.active)return null;const e={sessionId:S.id,eventType:type,timestamp:nowISO(),timeOffsetMs:Date.now()-S.t0,...data};S.events.push(e);if(S.events.length>MAX_EVENTS)S.events.shift();S.buckets[59]++;logRow(e,true);return e}
+function ranked(){const t={};S.clicks.forEach(c=>t[c.label]=(t[c.label]||0)+1);return Object.entries(t).sort((a,b)=>b[1]-a[1])}
+document.addEventListener('click',e=>{
+ if(inUI(e)||S.playing||!S.active)return;
+ const c=xy(e),n=e.target,ts=Date.now();
+ const click={n:S.clicks.length+1,x:c.clientX,y:c.clientY,pageX:c.pageX,pageY:c.pageY,element:n.tagName,id:n.id||'',className:typeof n.className==='string'?n.className:'',text:(n.innerText||'').trim().slice(0,60),label:label(n),time:nowISO(),ts};
+ const near=S.clicks.filter(k=>ts-k.ts<1000&&Math.hypot(k.pageX-c.pageX,k.pageY-c.pageY)<40).length;
+ S.clicks.push(click);record('click',{...c,label:click.label,targetTag:click.element,targetId:click.id,targetText:click.text,clickNumber:click.n});
+ if(near===2){S.rage++;record('rage_click',{...c,label:click.label});toast('Rage click detected')}
+ render();mini();upd();
+},true);
+document.addEventListener('mousemove',e=>{
+ if(inUI(e)||S.playing)return;
+ $('rx').textContent=e.pageX;$('ry').textContent=e.pageY;$('rel').textContent=label(e.target);
+ if(!S.active)return;S.raw++;const now=performance.now();if(now-S.lastMove<60||S.moves.length>=MAX_MOVES)return;S.lastMove=now;
+ const m={...xy(e),time:nowISO(),t:Date.now()-S.t0};S.moves.push(m);record('mousemove',{x:m.pageX,y:m.pageY});
+ if(S.layers.moves||S.layers.path)render();
+});
+let mq=0;const qMini=()=>mq||(mq=requestAnimationFrame(()=>{mq=0;mini()}));
+addEventListener('scroll',()=>{
+ const d=document.documentElement,y=scrollY,depth=Math.min(100,Math.round((y+innerHeight)/Math.max(1,d.scrollHeight)*100));
+ $('rs').textContent=depth+'%';qMini();
+ if(S.playing||!S.active)return;S.maxDepth=Math.max(S.maxDepth,depth);const now=performance.now();
+ if(now-S.lastScroll>=180){S.lastScroll=now;S.scrolls.push({scrollY:y,depth,time:nowISO()});record('scroll',{scrollY:y,scrollPercentage:depth,documentHeight:d.scrollHeight,viewportHeight:innerHeight})}
+},{passive:true});
+document.addEventListener('visibilitychange',()=>record('page_visibility',{state:document.visibilityState}));
+if('IntersectionObserver'in window)new IntersectionObserver(es=>es.forEach(x=>record('element_visibility',{elementId:x.target.id,visible:x.isIntersecting,visibilityRatio:+x.intersectionRatio.toFixed(3)})),{threshold:[0,.25,.5,.75,1]}).observe($('visibilityTarget'));
+else record('tracker_notice',{message:'IntersectionObserver is not supported in this browser.'});
+
+/* ---------- drawing ---------- */
+function render(){
+ const dw=document.documentElement.clientWidth,dh=Math.max(document.body.offsetHeight,innerHeight);
+ if(cv.width!==dw||cv.height!==dh){cv.width=dw;cv.height=dh;cv.style.width=dw+'px';cv.style.height=dh+'px'}
+ cx.clearRect(0,0,dw,dh);const L=S.layers,a1=css('--accent'),a2=css('--accent2'),panel=css('--panel'),ink=css('--ink');
+ if(L.heat){const r=+$('radius').value;S.clicks.forEach(c=>{const g=cx.createRadialGradient(c.pageX,c.pageY,0,c.pageX,c.pageY,r);g.addColorStop(0,'rgba(239,68,68,.55)');g.addColorStop(.45,'rgba(245,158,11,.28)');g.addColorStop(1,'rgba(250,204,21,0)');cx.fillStyle=g;cx.fillRect(c.pageX-r,c.pageY-r,2*r,2*r)})}
+ if(L.path&&S.moves.length>1)path(S.moves.length-1,false);
+ if(L.moves){cx.fillStyle='rgba(59,130,246,.45)';S.moves.forEach(m=>{cx.beginPath();cx.arc(m.pageX,m.pageY,2.5,0,7);cx.fill()})}
+ if(L.scatter){cx.fillStyle=a1;cx.strokeStyle='#fff';cx.lineWidth=2;S.clicks.forEach(c=>{cx.beginPath();cx.arc(c.pageX,c.pageY,5,0,7);cx.fill();cx.stroke()})}
+ if(L.clicks){cx.font='bold 11px sans-serif';cx.textAlign='center';cx.textBaseline='middle';S.clicks.forEach(c=>{cx.beginPath();cx.arc(c.pageX,c.pageY,9,0,7);cx.fillStyle=a2;cx.fill();cx.lineWidth=2;cx.strokeStyle=panel;cx.stroke();if(S.numbers!==false){cx.fillStyle='#14211e';cx.fillText(c.n,c.pageX,c.pageY+.5)}})}
+ if(S.ri!==null){path(S.ri,true);const m=S.moves[S.ri];cx.beginPath();cx.arc(m.pageX,m.pageY,9,0,7);cx.fillStyle='#ef4444';cx.fill();cx.lineWidth=3;cx.strokeStyle=panel;cx.stroke()}
+ function path(end,hot){const p=[S.moves[0]];for(let i=1;i<=end;i++){const q=p[p.length-1],m=S.moves[i];if(Math.hypot(m.pageX-q.pageX,m.pageY-q.pageY)>=30)p.push(m)}if(p.length<2)return;cx.lineWidth=hot?3.5:2.5;cx.lineCap='round';
+  p.forEach((q,i)=>{if(!i)return;const o=p[i-1];cx.strokeStyle=hot?'rgba(255,91,58,.9)':a1;cx.globalAlpha=hot?1:.25+.75*i/(p.length-1);cx.beginPath();cx.moveTo(o.pageX,o.pageY);cx.lineTo(q.pageX,q.pageY);cx.stroke()});
+  cx.globalAlpha=1;if(!hot)[[p[0],'Start',a1],[p[p.length-1],'End',a2]].forEach(([q,t,f])=>{cx.beginPath();cx.arc(q.pageX,q.pageY,6,0,7);cx.fillStyle=f;cx.fill();cx.lineWidth=3;cx.strokeStyle=panel;cx.stroke();cx.font='bold 12px sans-serif';cx.textAlign='left';cx.lineWidth=4;cx.strokeText(t,q.pageX+10,q.pageY-9);cx.fillStyle=ink;cx.fillText(t,q.pageX+10,q.pageY-9)})}
+}
+function mini(){
+ const W=96,H=220,dh=Math.max(document.body.offsetHeight,innerHeight),kx=W/document.documentElement.clientWidth,ky=H/dh;
+ mc.clearRect(0,0,W,H);mc.fillStyle=css('--soft');mc.fillRect(0,0,W,H);
+ mc.globalAlpha=.2;mc.fillStyle=css('--accent');mc.fillRect(0,0,W,H*S.maxDepth/100);mc.globalAlpha=1;
+ mc.fillStyle=css('--accent2');S.clicks.forEach(c=>{mc.beginPath();mc.arc(c.pageX*kx,c.pageY*ky,2.5,0,7);mc.fill()});
+ mc.strokeStyle=css('--accent');mc.lineWidth=2;mc.strokeRect(1,scrollY*ky+1,W-2,Math.max(8,innerHeight*ky)-2);
+}
+function spark(){const w=sp.clientWidth;if(!w)return;sp.width=w;sp.height=48;const pk=Math.max(4,...S.buckets),bw=w/60;sc.fillStyle=css('--accent');S.buckets.forEach((v,i)=>{const h=v/pk*44;sc.fillRect(i*bw+1,48-h,Math.max(1,bw-2),Math.max(h,1))})}
+mm.addEventListener('click',e=>{const r=mm.getBoundingClientRect(),dh=Math.max(document.body.offsetHeight,innerHeight);scrollTo({top:(e.clientY-r.top)/r.height*dh-innerHeight/2,behavior:'smooth'})});
+
+/* ---------- stats ---------- */
+const TILES=[['events','Events'],['clicks','Clicks'],['rage','Rage clicks'],['depth','Max depth'],['time','Time'],['cpm','Clicks / min'],['moves','Mouse points'],['vis','Visibility']];
+function tiles(box,pre){box.replaceChildren();TILES.forEach(([k,l])=>{const d=document.createElement('div'),b=document.createElement('b'),s=document.createElement('span');d.className='tile';b.id=pre+k;s.textContent=l;d.append(b,s);box.appendChild(d)})}
+function vals(){const t=el();return{events:S.events.length,clicks:S.clicks.length,rage:S.rage,depth:S.maxDepth+'%',time:fmt(t),cpm:t?(S.clicks.length/(t/60)).toFixed(1):'0',moves:S.moves.length,vis:S.events.filter(e=>e.eventType.endsWith('visibility')).length}}
+function upd(){const v=vals();for(const k in v){const n=$('v-'+k);if(n.textContent!=v[k]){n.textContent=v[k];n.classList.remove('bump');void n.offsetWidth;n.classList.add('bump')}}$('lastClick').textContent=S.clicks.length?S.clicks[S.clicks.length-1].label:'No clicks yet';
+ const box=$('top'),r=ranked().slice(0,5),mx=r[0]?r[0][1]:1;box.replaceChildren();
+ if(!r.length){box.className='note';box.textContent='Click anything to rank elements.';return}box.className='';
+ r.forEach(([l,n])=>{const d=document.createElement('div'),s=document.createElement('span'),c=document.createElement('b'),i=document.createElement('i');d.className='rk';s.textContent=l;c.textContent=n;i.style.width=n/mx*100+'%';d.append(s,c,i);box.appendChild(d)})}
+setInterval(()=>{S.buckets.shift();S.buckets.push(0);upd();spark();mini()},1000);
+
+/* ---------- log ---------- */
+function logRow(e,live){if(!S.filter.has(cat(e.eventType)))return;const box=$('log'),d=document.createElement('div'),b=document.createElement('em');d.className='ev';b.textContent=e.eventType;d.append((e.timeOffsetMs/1000).toFixed(1)+'s ',b,e.label?' '+e.label:e.visible!==undefined?' '+(e.visible?'visible':'hidden'):'');if(live){box.prepend(d);while(box.children.length>LOG_MAX)box.lastElementChild.remove()}else box.appendChild(d)}
+function rebuildLog(){$('log').replaceChildren();for(let i=S.events.length-1,n=0;i>=0&&n<LOG_MAX;i--)if(S.filter.has(cat(S.events[i].eventType))){logRow(S.events[i],false);n++}}
+[['click','Clicks'],['scroll','Scrolls'],['visibility','Visibility'],['mousemove','Mouse moves'],['system','System']].forEach(([k,l])=>{const b=document.createElement('button');b.className='chip';b.textContent=l;b.setAttribute('aria-pressed',S.filter.has(k));b.onclick=()=>{S.filter.has(k)?S.filter.delete(k):S.filter.add(k);b.setAttribute('aria-pressed',S.filter.has(k));rebuildLog()};$('chips').appendChild(b)});
+
+/* ---------- data ---------- */
+function data(){return{tracker:'Website Behaviour & Visibility Tracker',sessionId:S.id,startedAt:new Date(S.t0).toISOString(),exportedAt:nowISO(),trackingActive:S.active,summary:{totalEvents:S.events.length,totalClicks:S.clicks.length,rageClicks:S.rage,totalSavedMousePoints:S.moves.length,rawMouseMoves:S.raw,totalScrollEvents:S.scrolls.length,maxScrollDepthPercent:S.maxDepth,timeOnPageSeconds:el()},events:S.events,clicks:S.clicks,mouseMovements:S.moves,scrollEvents:S.scrolls}}
+function dl(txt,type,ext){const u=URL.createObjectURL(new Blob([txt],{type})),a=document.createElement('a');a.href=u;a.download='website-tracker-'+S.id+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+const show=()=>{$('json').value=JSON.stringify(data(),null,2)};
+const exportJSON=()=>{show();dl(JSON.stringify(data(),null,2),'application/json','.json');toast('JSON exported')};
+function exportCSV(){if(!S.clicks.length)return toast('No clicks to export yet');dl([['n','time','pageX','pageY','element']].concat(S.clicks.map(c=>[c.n,c.time,c.pageX,c.pageY,'"'+c.label.replace(/"/g,'""')+'"'])).map(r=>r.join(',')).join('\n'),'text/csv','.csv');toast('CSV exported')}
+function summary(){const v=vals();$$('#sTiles .tile b').forEach((b,i)=>b.textContent=v[TILES[i][0]]);const tb=$('sRows');tb.replaceChildren();const r=ranked();(r.length?r:[['No clicks yet','']]).forEach(([l,n])=>{const tr=document.createElement('tr'),a=document.createElement('td'),b=document.createElement('td');a.textContent=l;b.textContent=n;tr.append(a,b);tb.appendChild(tr)});$('dlg').showModal()}
+function undo(){if(!S.clicks.length)return toast('No clicks to undo');const r=S.clicks.pop();S.events=S.events.filter(e=>!(e.eventType==='click'&&e.clickNumber===r.n));S.clicks.forEach((c,i)=>c.n=i+1);render();mini();upd();rebuildLog();toast('Last click removed')}
+function reset(){if(!confirm('Reset all collected tracking data and visuals? This cannot be undone.'))return;Object.assign(S,{events:[],clicks:[],moves:[],scrolls:[],t0:Date.now(),id:'session_'+Math.random().toString(36).slice(2,10),maxDepth:0,raw:0,rage:0,buckets:new Array(60).fill(0)});$('sid').textContent=S.id;$('json').value='';render();mini();upd();rebuildLog();toast('Data reset')}
+
+/* ---------- controls ---------- */
+function setState(){$('bState').textContent=S.active?'Tracking':'Paused';$('bState').classList.toggle('off',!S.active);$('bState').setAttribute('aria-pressed',S.active)}
+function start(){if(S.active)return;S.active=true;setState();record('tracking_started');toast('Tracking resumed')}
+function stop(){if(!S.active)return;record('tracking_stopped');S.active=false;setState();toast('Tracking paused')}
+function sync(){$$('[data-layer]').forEach(i=>i.checked=S.layers[i.dataset.layer])}
+function only(k){for(const l in S.layers)S.layers[l]=l===k;sync();render()}
+function replay(){const m=S.moves;if(m.length<2)return toast('Move the cursor around first, then replay');cancelAnimationFrame(S.raf);const T=m[m.length-1].t-m[0].t,dur=Math.min(10000,Math.max(2500,T/3)),t0=performance.now();S.playing=true;toast('Replaying your cursor');
+ (function f(now){const k=Math.min(1,(now-t0)/dur),tt=m[0].t+k*T;let i=0;while(i<m.length-1&&m[i+1].t<=tt)i++;S.ri=i;render();scrollTo(0,Math.max(0,m[i].pageY-innerHeight/2));if(k<1)S.raf=requestAnimationFrame(f);else setTimeout(()=>{S.playing=false;S.ri=null;render()},600)})(t0)}
+function tab(id){$$('[data-tab]').forEach(x=>x.setAttribute('aria-selected',x.dataset.tab===id));$$('.tp').forEach(p=>p.hidden=p.id!==id);moveInd();spark();mini()}
+const dock=()=>{document.body.classList.toggle('nodock');setTimeout(render,300)};
+$$('[data-tab]').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+$$('[data-layer]').forEach(i=>i.onchange=()=>{S.layers[i.dataset.layer]=i.checked;render()});
+$$('[data-scroll]').forEach(b=>b.onclick=()=>b.dataset.scroll==='top'?scrollTo({top:0,behavior:'smooth'}):$(b.dataset.scroll).scrollIntoView({behavior:'smooth'}));
+$('radius').oninput=render;$('bState').onclick=()=>S.active?stop():start();$('bReplay').onclick=replay;
+$('bClear').onclick=()=>{for(const l in S.layers)S.layers[l]=false;sync();render()};
+$('bHide').onclick=dock;$('fab').onclick=dock;$('bJson').onclick=exportJSON;$('sJson').onclick=exportJSON;$('bCsv').onclick=exportCSV;$('bShow').onclick=show;$('bUndo').onclick=undo;$('bReset').onclick=reset;$('bSummary').onclick=summary;$('sClose').onclick=()=>$('dlg').close();
+$('bCopy').onclick=()=>navigator.clipboard.writeText(JSON.stringify(data(),null,2)).then(()=>toast('JSON copied'),()=>toast('Copy blocked by the browser'));
+$('bTheme').onclick=()=>{const d=document.documentElement;d.dataset.theme=d.dataset.theme==='dark'?'light':'dark';render();mini();spark()};
+document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+document.addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey||/INPUT|TEXTAREA/.test(e.target.tagName))return;const k=e.key.toLowerCase();
+ if(k==='t')dock();else if(k==='p')S.active?stop():start();else if(k==='h'){S.layers.heat=!S.layers.heat;sync();render()}else if(k==='r')replay()});
+addEventListener('resize',()=>{render();mini();moveInd()});addEventListener('load',()=>{render();mini()});if('ResizeObserver'in window)new ResizeObserver(()=>{render();mini()}).observe(document.body);
+
+
+/* ---------- motion ---------- */
+function moveInd(){const b=document.querySelector('[data-tab][aria-selected=true]'),i=document.querySelector('.ind');i.style.left=b.offsetLeft+'px';i.style.width=b.offsetWidth+'px'}
+const h1=document.querySelector('header h1'),hd=document.querySelector('header');
+const words=h1.textContent.split(' ');h1.replaceChildren();words.forEach((w,i)=>{const s=document.createElement('span');s.className='w';s.style.setProperty('--i',i);s.textContent=w;h1.append(s,' ')});
+hd.addEventListener('mousemove',e=>{const r=hd.getBoundingClientRect();hd.style.setProperty('--mx',e.clientX-r.left+'px');hd.style.setProperty('--my',e.clientY-r.top+'px')});
+document.addEventListener('mousemove',e=>{$('glow').style.transform=`translate(${e.clientX}px,${e.clientY}px)`});
+addEventListener('scroll',()=>{$('prog').style.transform=`scaleX(${scrollY/Math.max(1,document.documentElement.scrollHeight-innerHeight)})`},{passive:true});
+const rio=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');rio.unobserve(x.target);setTimeout(()=>x.target.style.transitionDelay='',1000)}}),{threshold:.1});
+$$('.block,.card').forEach((n,i)=>{n.classList.add('rv');n.style.transitionDelay=(i%3)*90+'ms';rio.observe(n)});
+$$('.card').forEach(c=>{c.addEventListener('mousemove',e=>{const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;c.style.transform=`perspective(700px) rotateX(${-y*9}deg) rotateY(${x*9}deg) translateY(-4px)`});c.addEventListener('mouseleave',()=>c.style.transform='')});
+document.addEventListener('click',e=>{if(inUI(e)||S.playing)return;const r=document.createElement('div');r.className='rip';r.style.left=e.pageX+'px';r.style.top=e.pageY+'px';document.body.appendChild(r);setTimeout(()=>r.remove(),800)},true);
+setTimeout(moveInd,50);
+window.Tracker={start,stop,showHeatmap:()=>only('heat'),showScatter:()=>only('scatter'),showMouse:()=>only('moves'),clearOverlay:()=>$('bClear').click(),exportJSON,showData:show,getTrackingData:data,reset,replay};
+tiles($('tiles'),'v-');tiles($('sTiles'),'s-');$('sid').textContent=S.id;sync();setState();render();upd();mini();spark();record('tracker_initialized',{pageTitle:document.title,pageUrl:location.href});rebuildLog();
+})();
+</script>
+</body>
+</html>
